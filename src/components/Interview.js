@@ -38,7 +38,7 @@ const Interview = () => {
     hasStarted.current = true;
 
     const startInterview = async () => {
-      const response = await fetch("http://localhost:8000/respond", {
+      const response = await fetch("https://ai-interview-backend-a1zq.onrender.com/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic, transcript: "", history: [] }),
@@ -67,7 +67,7 @@ const Interview = () => {
     const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
 
     setIsLoading(true);
-    const response = await fetch("http://localhost:8000/respond", {
+    const response = await fetch("https://ai-interview-backend-a1zq.onrender.com/respond", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ topic, transcript, history: chatHistory }),
@@ -86,7 +86,7 @@ const Interview = () => {
     const formData = new FormData();
     formData.append("file", blob, "recording.webm");
 
-    const response = await fetch("http://localhost:8000/transcribe", {
+    const response = await fetch("https://ai-interview-backend-a1zq.onrender.com/transcribe", {
       method: "POST",
       body: formData,
     });
