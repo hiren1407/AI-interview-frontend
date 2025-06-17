@@ -2,6 +2,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaRobot, FaUser } from "react-icons/fa";
+import Modal from "react-modal";
+import { v4 as uuidv4 } from "uuid";
+import { API_URL } from "../constants";
+
+Modal.setAppElement("#root");
+
 
 
 const Interview = () => {
@@ -14,6 +20,9 @@ const Interview = () => {
   const [messages, setMessages] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(30 * 60);
+  const [showModal, setShowModal] = useState(false);
+  const sessionId = useRef(uuidv4());
 
   // Stop mic stream on unmount
   const stopStream = () => {
@@ -30,7 +39,13 @@ const Interview = () => {
     };
     setupMic();
 
-    return stopStream;
+    return () => {
+    // Stop speech synthesis when the component unmounts
+    speechSynthesis.cancel();
+
+    // Stop the mic stream if it's still active
+    stopStream();
+  };
   }, []);
 
   useEffect(() => {
@@ -38,10 +53,10 @@ const Interview = () => {
     hasStarted.current = true;
 
     const startInterview = async () => {
-      const response = await fetch("https://ai-interview-backend-a1zq.onrender.com/respond", {
+      const response = await fetch(`${API_URL}/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, transcript: "", history: [] }),
+        body: JSON.stringify({ topic, transcript: "", history: [],session_id: sessionId.current }),
       });
 
       const data = await response.json();
@@ -58,6 +73,28 @@ const Interview = () => {
     chatRef.current?.scrollTo(0, chatRef.current.scrollHeight);
   }, [messages, isLoading]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setShowModal(true);
+          stopRecording();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (seconds) => {
+    const min = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const sec = (seconds % 60).toString().padStart(2, "0");
+    return `${min}:${sec}`;
+  };
+
+
   const speak = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
     speechSynthesis.speak(utterance);
@@ -67,10 +104,10 @@ const Interview = () => {
     const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
 
     setIsLoading(true);
-    const response = await fetch("https://ai-interview-backend-a1zq.onrender.com/respond", {
+    const response = await fetch(`${API_URL}/respond`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, transcript, history: chatHistory }),
+      body: JSON.stringify({ topic, transcript, history: chatHistory, session_id: sessionId.current }),
     });
 
     const data = await response.json();
@@ -85,8 +122,9 @@ const Interview = () => {
     setIsLoading(true);
     const formData = new FormData();
     formData.append("file", blob, "recording.webm");
+    formData.append("session_id", sessionId.current);
 
-    const response = await fetch("https://ai-interview-backend-a1zq.onrender.com/transcribe", {
+    const response = await fetch(`${API_URL}/transcribe`, {
       method: "POST",
       body: formData,
     });
@@ -131,9 +169,10 @@ const Interview = () => {
   };
 
   return (
-    <div className="p-6 min-h-screen bg-gray-100">
+    <div className="p-6  min-h-screen bg-gray-100">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6 space-y-4">
         <h1 className="text-2xl font-bold text-center">🧠 Topic: {topic}</h1>
+        <p className="text-right font-mono text-sm text-gray-600">⏰ Time Left: {formatTime(secondsLeft)}</p>
 
         <div
           ref={chatRef}
@@ -197,6 +236,23 @@ const Interview = () => {
           </button>
         </div>
       </div>
+      <Modal
+        isOpen={showModal}
+        contentLabel="Interview Finished"
+        className="bg-white p-8 rounded-lg shadow-lg max-w-md mx-auto mt-20"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+      >
+        <h2 className="text-xl font-semibold mb-4">⏰ Time's Up!</h2>
+        <p className="mb-4">The 30-minute interview session has ended. You can download the transcript or return to topics.</p>
+        <div className="flex gap-2 justify-end">
+          <button onClick={downloadTranscript} className="bg-gray-800 text-white px-4 py-2 rounded">
+            📄 Download
+          </button>
+          <button onClick={() => navigate("/")} className="bg-blue-600 text-white px-4 py-2 rounded">
+            🔙 Go Back
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };
