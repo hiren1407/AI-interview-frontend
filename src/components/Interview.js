@@ -1,6 +1,6 @@
 // src/components/Interview.js
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { FaRobot, FaUser } from "react-icons/fa";
 import Modal from "react-modal";
 import { v4 as uuidv4 } from "uuid";
@@ -22,7 +22,8 @@ const Interview = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(30 * 60);
   const [showModal, setShowModal] = useState(false);
-  const sessionId = useRef(uuidv4());
+  const location = useLocation();
+  const sessionId = useRef(location.state?.sessionId || uuidv4());
 
   // Stop mic stream on unmount
   const stopStream = () => {
