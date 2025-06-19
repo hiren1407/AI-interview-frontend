@@ -26,6 +26,7 @@ const Interview = () => {
   const sessionId = useRef(location.state?.sessionId || uuidv4());
   const [feedback, setFeedback] = useState(null);
   const [score, setScore] = useState(null);
+  const [isStarting, setIsStarting] = useState(true);
 
   // Stop mic stream on unmount
   const stopStream = () => {
@@ -52,25 +53,29 @@ const Interview = () => {
   }, []);
 
   useEffect(() => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
+  if (hasStarted.current) return;
+  hasStarted.current = true;
 
-    const startInterview = async () => {
-      const response = await fetch(`${API_URL}/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, transcript: "", history: [],session_id: sessionId.current }),
-      });
+  const startInterview = async () => {
+    setIsStarting(true); // show loading
 
-      const data = await response.json();
-      if (data.reply) {
-        setMessages([{ role: "assistant", text: data.reply }]);
-        speak(data.reply);
-      }
-    };
+    const response = await fetch(`${API_URL}/respond`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topic, transcript: "", history: [], session_id: sessionId.current }),
+    });
 
-    startInterview();
-  }, [topic]);
+    const data = await response.json();
+    if (data.reply) {
+      setMessages([{ role: "assistant", text: data.reply }]);
+      speak(data.reply);
+    }
+
+    setIsStarting(false); // hide loading after reply
+  };
+
+  startInterview();
+}, [topic]);
 
   useEffect(() => {
     chatRef.current?.scrollTo(0, chatRef.current.scrollHeight);
@@ -172,35 +177,50 @@ const Interview = () => {
   };
 
   const getFeedback = async () => {
-  const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
-  speechSynthesis.cancel();
+        const assistantMessages = messages.filter((m) => m.role === "assistant");
 
-    // Stop the mic stream if it's still active
-   stopStream();
+        if (assistantMessages.length < 3) {
+            setFeedback("Please complete at least 3 interview questions to receive feedback.");
+            setScore(null);
+            return;
+        }
+        const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
+        speechSynthesis.cancel();
 
-  const response = await fetch(`${API_URL}/feedback`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      topic,
-      transcript: "",
-      history: chatHistory,
-      session_id: sessionId.current,
-    }),
-  });
+            // Stop the mic stream if it's still active
+        stopStream();
 
-  const data = await response.json();
-  if (data.feedback && data.score !== undefined) {
-    setFeedback(data.feedback);
-    setScore(data.score);
-  } else {
-    setFeedback("Sorry, feedback couldn't be generated.");
-    setScore(null);
-  }
+        const response = await fetch(`${API_URL}/feedback`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+            topic,
+            transcript: "",
+            history: chatHistory,
+            session_id: sessionId.current,
+            }),
+        });
+
+        const data = await response.json();
+        if (data.feedback && data.score !== undefined) {
+            setFeedback(data.feedback);
+            setScore(data.score);
+        } else {
+            setFeedback("Sorry, feedback couldn't be generated.");
+            setScore(null);
+        }
 };
 
+
   return (
+    
     <div className="p-6  min-h-screen bg-gray-100">
+        {isStarting && (
+        <div className="fixed inset-0 z-50 bg-white bg-opacity-90 flex flex-col items-center justify-center">
+            <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+            <p className="text-lg font-semibold text-gray-700">Preparing your interview...</p>
+        </div>
+        )}
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 space-y-4">
         <h1 className="text-2xl font-bold text-center">🧠 Topic: {topic}</h1>
         <p className="text-right font-mono text-sm text-gray-600">⏰ Time Left: {formatTime(secondsLeft)}</p>
