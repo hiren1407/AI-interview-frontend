@@ -20,10 +20,12 @@ const Interview = () => {
   const [messages, setMessages] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(30 * 60);
+  const [secondsLeft, setSecondsLeft] = useState(topic === "Resume Based Questions" ? 15 * 60 : 30 * 60);
   const [showModal, setShowModal] = useState(false);
   const location = useLocation();
   const sessionId = useRef(location.state?.sessionId || uuidv4());
+  const [feedback, setFeedback] = useState(null);
+  const [score, setScore] = useState(null);
 
   // Stop mic stream on unmount
   const stopStream = () => {
@@ -169,9 +171,33 @@ const Interview = () => {
     link.click();
   };
 
+  const getFeedback = async () => {
+  const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
+
+  const response = await fetch(`${API_URL}/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      topic,
+      transcript: "",
+      history: chatHistory,
+      session_id: sessionId.current,
+    }),
+  });
+
+  const data = await response.json();
+  if (data.feedback && data.score !== undefined) {
+    setFeedback(data.feedback);
+    setScore(data.score);
+  } else {
+    setFeedback("Sorry, feedback couldn't be generated.");
+    setScore(null);
+  }
+};
+
   return (
     <div className="p-6  min-h-screen bg-gray-100">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6 space-y-4">
+      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 space-y-4">
         <h1 className="text-2xl font-bold text-center">🧠 Topic: {topic}</h1>
         <p className="text-right font-mono text-sm text-gray-600">⏰ Time Left: {formatTime(secondsLeft)}</p>
 
@@ -235,6 +261,16 @@ const Interview = () => {
           >
             🔙 Back to Topics
           </button>
+          <button
+            onClick={() => {
+                stopRecording();
+                setShowModal(true);
+                getFeedback();
+            }}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+            ✅ Complete Interview
+            </button>
         </div>
       </div>
       <Modal
@@ -244,7 +280,16 @@ const Interview = () => {
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
       >
         <h2 className="text-xl font-semibold mb-4">⏰ Time's Up!</h2>
-        <p className="mb-4">The 30-minute interview session has ended. You can download the transcript or return to topics.</p>
+        {feedback && (
+        <div className="mt-4 p-4 bg-gray-100 rounded">
+            <h3 className="text-lg font-semibold mb-2">📝 AI Feedback</h3>
+            {score !== null && (
+            <p className="text-sm mb-2">⭐ Score: <span className="font-bold">{score}/10</span></p>
+            )}
+            <p className="text-sm whitespace-pre-line">{feedback}</p>
+        </div>
+        )}
+        <p className="mb-4">The interview session has ended. You can download the transcript or return to topics.</p>
         <div className="flex gap-2 justify-end">
           <button onClick={downloadTranscript} className="bg-gray-800 text-white px-4 py-2 rounded">
             📄 Download
