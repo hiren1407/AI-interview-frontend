@@ -173,6 +173,10 @@ const Interview = () => {
 
   const getFeedback = async () => {
   const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
+  speechSynthesis.cancel();
+
+    // Stop the mic stream if it's still active
+   stopStream();
 
   const response = await fetch(`${API_URL}/feedback`, {
     method: "POST",
