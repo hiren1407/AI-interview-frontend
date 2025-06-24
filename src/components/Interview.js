@@ -27,6 +27,17 @@ const Interview = () => {
   const [feedback, setFeedback] = useState(null);
   const [score, setScore] = useState(null);
   const [isStarting, setIsStarting] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const audioRef = useRef(null);
+
+  const stopSpeaking = () => {
+  if (audioRef.current) {
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+    audioRef.current = null;
+    setIsSpeaking(false);
+  }
+};
 
   // Stop mic stream on unmount
   const stopStream = () => {
@@ -45,10 +56,11 @@ const Interview = () => {
 
     return () => {
     // Stop speech synthesis when the component unmounts
-    speechSynthesis.cancel();
+    
 
     // Stop the mic stream if it's still active
-    stopStream();
+    stopStream();     // Stop mic
+  stopSpeaking(); 
   };
   }, []);
 
@@ -59,19 +71,40 @@ const Interview = () => {
   const startInterview = async () => {
     setIsStarting(true); // show loading
 
-    const response = await fetch(`${API_URL}/respond`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, transcript: "", history: [], session_id: sessionId.current }),
-    });
+  const response = await fetch(`${API_URL}/respond`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topic, transcript: "", history: [], session_id: sessionId.current }),
+  });
 
-    const data = await response.json();
-    if (data.reply) {
-      setMessages([{ role: "assistant", text: data.reply }]);
-      speak(data.reply);
+  const data = await response.json();
+
+  if (data.reply) {
+    setMessages([{ role: "assistant", text: data.reply }]);
+
+    if (data.audio_base64) {
+      const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
+      const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+
+            const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+
+        setIsSpeaking(true);
+        audio.onended = () => {
+        setIsSpeaking(false);
+        audioRef.current = null;
+        };
+
+        audio.play().catch(err => {
+        console.error("Audio play error:", err);
+        setIsSpeaking(false);
+        });
     }
+  }
 
-    setIsStarting(false); // hide loading after reply
+  setIsStarting(false); // hide loading after reply
   };
 
   startInterview();
@@ -103,28 +136,46 @@ const Interview = () => {
   };
 
 
-  const speak = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    speechSynthesis.speak(utterance);
-  };
+  
+
 
   const getResponseFromServer = async (transcript) => {
-    const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
+  const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
 
-    setIsLoading(true);
-    const response = await fetch(`${API_URL}/respond`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, transcript, history: chatHistory, session_id: sessionId.current }),
-    });
+  setIsLoading(true);
+  const response = await fetch(`${API_URL}/respond`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topic, transcript, history: chatHistory, session_id: sessionId.current }),
+  });
 
-    const data = await response.json();
-    setIsLoading(false);
-    if (data.reply) {
-      setMessages(prev => [...prev, { role: "assistant", text: data.reply }]);
-      speak(data.reply);
+  const data = await response.json();
+  setIsLoading(false);
+
+  if (data.reply) {
+    setMessages(prev => [...prev, { role: "assistant", text: data.reply }]);
+
+    if (data.audio_base64) {
+      const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
+      const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+
+        setIsSpeaking(true);
+        audio.onended = () => {
+        setIsSpeaking(false);
+        audioRef.current = null;
+        };
+
+        audio.play().catch(err => {
+        console.error("Audio play error:", err);
+        setIsSpeaking(false);
+        });
     }
-  };
+  }
+};
+
 
   const transcribeAudio = async (blob) => {
     setIsLoading(true);
@@ -146,6 +197,7 @@ const Interview = () => {
   };
 
   const startRecording = () => {
+    stopSpeaking();
     const mediaRecorder = new MediaRecorder(window.stream);
     mediaRecorderRef.current = mediaRecorder;
     chunksRef.current = [];
@@ -185,7 +237,7 @@ const Interview = () => {
             return;
         }
         const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
-        speechSynthesis.cancel();
+        
 
             // Stop the mic stream if it's still active
         stopStream();
@@ -259,6 +311,9 @@ const Interview = () => {
               <div className="h-4 w-40 bg-gray-300 rounded-md" />
             </div>
           )}
+          {isSpeaking && (
+            <p className="text-sm text-gray-500 animate-pulse">🔊 AI is speaking...</p>
+            )}
         </div>
 
         <div className="flex flex-wrap gap-2 justify-between items-center">
@@ -280,7 +335,11 @@ const Interview = () => {
           </button>
 
           <button
-            onClick={() => navigate("/")}
+            onClick={() => {
+                stopRecording();
+                stopSpeaking();
+                navigate("/");
+            }}
             className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
           >
             🔙 Back to Topics
@@ -288,6 +347,7 @@ const Interview = () => {
           <button
             onClick={() => {
                 stopRecording();
+                stopSpeaking();
                 setShowModal(true);
                 getFeedback();
             }}

@@ -1,38 +1,39 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { API_URL } from "../constants";
 import { v4 as uuidv4 } from "uuid";
 
 Modal.setAppElement("#root");
 
-const TOPICS = [
-  "Frontend Development",
-  "Behavioral Questions",
-  "System Design",
-  "Data Structures & Algorithms",
-  "DevOps",
-  "Cloud Computing",
-  "Full Stack Development",
-  "Backend  Development",
-  "Data Science",
-  "Data Analytics",
-  "Project Management",
-  "Resume Based Questions",
-];
+const topicStructure = {
+  Tech: {
+    "Programming Languages": ["JavaScript", "Python", "Java"],
+    "Concepts": [
+      "Frontend Development",
+      "Backend Development",
+      "Full Stack Development",
+      "System Design",
+      "DevOps",
+      "Cloud Computing",
+      "Data Structures & Algorithms",
+    ],
+    "Data Topics": ["Data Analytics", "Data Science"],
+  },
+  "Non-Tech": {
+    "Soft Skills": ["Behavioral Questions", "Project Management"],
+    "Resume": ["Resume Based Questions"],
+  },
+};
 
-const TopicSelection = () => {
-    const sessionId = React.useRef(uuidv4());
+const TopicPage = () => {
+  const { category, subcategory } = useParams();
   const navigate = useNavigate();
+  const topics = topicStructure[category]?.[subcategory] || [];
+
+  const sessionId = React.useRef(uuidv4());
   const [showModal, setShowModal] = useState(false);
   const [resumeFile, setResumeFile] = useState(null);
-
-  useEffect(() => {
-    if (window.stream) {
-      window.stream.getTracks().forEach((track) => track.stop());
-      window.stream = null;
-    }
-  }, []);
 
   const handleTopicClick = (topic) => {
     if (topic === "Resume Based Questions") {
@@ -55,29 +56,29 @@ const TopicSelection = () => {
     const data = await response.json();
     if (data.success) {
       navigate(`/interview/${"Resume Based Questions"}`, {
-  state: { sessionId: sessionId.current },
-});
+        state: { sessionId: sessionId.current },
+      });
     } else {
       alert("Failed to upload resume");
     }
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-4 text-center">
-      <h1 className="text-4xl font-bold mb-6">Welcome to Voice Interview Bot</h1>
-      <p className="mb-10 text-xl">Select a topic to begin your voice-based interview practice:</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {TOPICS.map((topic) => (
+    <div className="p-6 max-w-3xl mx-auto text-center">
+      <h2 className="text-3xl font-semibold mb-4">{subcategory} Topics</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {topics.map((topic) => (
           <div
             key={topic}
             onClick={() => handleTopicClick(topic)}
-            className="mt-3 cursor-pointer border rounded-xl p-6 bg-white shadow hover:bg-blue-100 transition"
+            className="cursor-pointer border rounded-xl p-6 bg-white shadow hover:bg-purple-100 transition"
           >
-            <h2 className="text-xl font-semibold">{topic}</h2>
+            <h3 className="text-lg font-medium">{topic}</h3>
           </div>
         ))}
       </div>
 
+      {/* Resume Modal */}
       <Modal
         isOpen={showModal}
         onRequestClose={() => setShowModal(false)}
@@ -92,12 +93,22 @@ const TopicSelection = () => {
           className="mb-4"
         />
         <div className="flex justify-end space-x-2">
-          <button onClick={() => setShowModal(false)} className="bg-gray-400 px-4 py-2 rounded text-white">Cancel</button>
-          <button onClick={handleUpload} className="bg-blue-600 px-4 py-2 rounded text-white">Upload</button>
+          <button
+            onClick={() => setShowModal(false)}
+            className="bg-gray-400 px-4 py-2 rounded text-white"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpload}
+            className="bg-blue-600 px-4 py-2 rounded text-white"
+          >
+            Upload
+          </button>
         </div>
       </Modal>
     </div>
   );
 };
 
-export default TopicSelection;
+export default TopicPage;
