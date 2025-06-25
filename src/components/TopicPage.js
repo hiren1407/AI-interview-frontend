@@ -10,7 +10,7 @@ Modal.setAppElement("#root");
 const topicStructure = {
   Tech: {
     "Programming Languages": ["JavaScript", "Python", "Java","C-sharp"],
-    "Concepts": [
+    "Software Development": [
       "Frontend Development",
       "Backend Development",
       "Full Stack Development",
@@ -20,8 +20,8 @@ const topicStructure = {
       "Data Structures & Algorithms",
         "Software Testing"
     ],
-    "Data Topics": ["Data Analytics", "Data Science"],
-    "AI Topics": ["Machine Learning", "Deep Learning"],
+    "Data": ["Data Analytics", "Data Science"],
+    "AI": ["Machine Learning", "Deep Learning"],
   },
   "Non-Tech": {
     "Business Skills": ["Behavioral Questions", "Project Management", "Business Analytics", "Product Management"],
