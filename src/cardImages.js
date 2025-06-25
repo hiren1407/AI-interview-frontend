@@ -1,0 +1,38 @@
+export const categoryImages = {
+  "Tech": "https://cdn-icons-png.flaticon.com/128/4269/4269808.png",
+  "Non-Tech": "https://img.icons8.com/color/96/people-working-together.png",
+};
+
+export const subcategoryImages = {
+  "Programming Languages": "https://img.icons8.com/color/96/source-code.png",
+  "Concepts": "https://img.icons8.com/color/96/design.png",
+  "Data Topics": "https://img.icons8.com/color/96/combo-chart.png",
+"AI Topics": "https://img.icons8.com/color/96/artificial-intelligence.png",
+  "Business Skills": "https://img.icons8.com/color/96/conference.png",
+  "Resume": "https://img.icons8.com/color/96/resume.png",
+};
+
+export const topicImages = {
+  "Frontend Development": "https://cdn-icons-png.flaticon.com/128/11987/11987410.png",
+  "Backend Development": "https://cdn-icons-png.flaticon.com/128/6007/6007875.png",
+  "Full Stack Development": "https://cdn-icons-png.flaticon.com/128/15230/15230576.png",
+  "System Design": "https://img.icons8.com/color/96/network.png",
+  "DevOps": "https://cdn-icons-png.flaticon.com/128/5687/5687273.png",
+  "Cloud Computing": "https://img.icons8.com/color/96/cloud.png",
+  "Data Structures & Algorithms": "https://cdn-icons-png.flaticon.com/128/1990/1990592.png",
+  "Software Testing": "https://img.icons8.com/color/96/test-passed.png",
+  "Data Analytics": "https://img.icons8.com/color/96/combo-chart.png",
+  "Data Science": "https://img.icons8.com/color/96/artificial-intelligence.png",
+  "JavaScript": "https://img.icons8.com/color/96/javascript.png",
+  "Python": "https://img.icons8.com/color/96/python.png",
+  "Java": "https://img.icons8.com/color/96/java-coffee-cup-logo.png",
+  "C-sharp":"https://cdn-icons-png.flaticon.com/128/6132/6132221.png",
+  "Machine Learning": "https://cdn-icons-png.flaticon.com/128/9240/9240330.png",
+  "Deep Learning": "https://cdn-icons-png.flaticon.com/128/8637/8637113.png",
+  "Business Analytics": "https://cdn-icons-png.flaticon.com/128/18148/18148662.png",
+    "Product Management": "https://cdn-icons-png.flaticon.com/128/8787/8787057.png",
+
+  "Behavioral Questions": "https://img.icons8.com/color/96/questions.png",
+  "Project Management": "https://img.icons8.com/color/96/task.png",
+  "Resume Based Questions": "https://img.icons8.com/color/96/resume.png",
+};

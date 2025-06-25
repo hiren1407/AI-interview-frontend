@@ -65,8 +65,8 @@ const Interview = () => {
   }, []);
 
   useEffect(() => {
-  if (hasStarted.current) return;
-  hasStarted.current = true;
+  const isMounted = { current: true };
+  
 
   const startInterview = async () => {
     setIsStarting(true); // show loading
@@ -78,6 +78,7 @@ const Interview = () => {
   });
 
   const data = await response.json();
+  if (!isMounted.current) return;
 
   if (data.reply) {
     setMessages([{ role: "assistant", text: data.reply }]);
@@ -108,6 +109,11 @@ const Interview = () => {
   };
 
   startInterview();
+  return () => {
+    isMounted.current = false;
+    stopStream();
+    stopSpeaking();
+  };
 }, [topic]);
 
   useEffect(() => {
@@ -378,7 +384,7 @@ const Interview = () => {
           <button onClick={downloadTranscript} className="bg-gray-800 text-white px-4 py-2 rounded">
             📄 Download
           </button>
-          <button onClick={() => navigate("/")} className="bg-blue-600 text-white px-4 py-2 rounded">
+          <button onClick={() => navigate(-1)} className="bg-blue-600 text-white px-4 py-2 rounded">
             🔙 Go Back
           </button>
         </div>

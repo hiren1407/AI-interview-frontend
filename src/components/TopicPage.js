@@ -3,12 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { API_URL } from "../constants";
 import { v4 as uuidv4 } from "uuid";
+import { topicImages } from "../cardImages";
 
 Modal.setAppElement("#root");
 
 const topicStructure = {
   Tech: {
-    "Programming Languages": ["JavaScript", "Python", "Java"],
+    "Programming Languages": ["JavaScript", "Python", "Java","C-sharp"],
     "Concepts": [
       "Frontend Development",
       "Backend Development",
@@ -17,11 +18,13 @@ const topicStructure = {
       "DevOps",
       "Cloud Computing",
       "Data Structures & Algorithms",
+        "Software Testing"
     ],
     "Data Topics": ["Data Analytics", "Data Science"],
+    "AI Topics": ["Machine Learning", "Deep Learning"],
   },
   "Non-Tech": {
-    "Soft Skills": ["Behavioral Questions", "Project Management"],
+    "Business Skills": ["Behavioral Questions", "Project Management", "Business Analytics", "Product Management"],
     "Resume": ["Resume Based Questions"],
   },
 };
@@ -66,17 +69,27 @@ const TopicPage = () => {
   return (
     <div className="p-6 max-w-3xl mx-auto text-center">
       <h2 className="text-3xl font-semibold mb-4">{subcategory} Topics</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {topics.map((topic) => (
-          <div
-            key={topic}
-            onClick={() => handleTopicClick(topic)}
-            className="cursor-pointer border rounded-xl p-6 bg-white shadow hover:bg-purple-100 transition"
-          >
-            <h3 className="text-lg font-medium">{topic}</h3>
-          </div>
-        ))}
+     <div className="space-y-6">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    {topics.map((topic) => (
+      <div
+        key={topic}
+        onClick={() => handleTopicClick(topic)}
+        className="cursor-pointer border rounded-xl p-6 bg-white shadow hover:bg-purple-100 transition flex flex-col items-center space-y-4 min-h-[200px]"
+      >
+        <img src={topicImages[topic]} alt={topic} className="w-20 h-20" />
+        <h3 className="text-lg font-medium">{topic}</h3>
       </div>
+    ))}
+  </div>
+
+  <button
+    onClick={() => navigate(-1)}
+    className="mt-4 px-6 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
+  >
+    ⬅ Back
+  </button>
+</div>
 
       {/* Resume Modal */}
       <Modal
