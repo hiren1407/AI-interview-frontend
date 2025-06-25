@@ -5,7 +5,7 @@ export const categoryImages = {
 
 export const subcategoryImages = {
   "Programming Languages": "https://img.icons8.com/color/96/source-code.png",
-  "Software Development": "https://img.icons8.com/color/96/design.png",
+  "Software Development": "https://cdn-icons-png.flaticon.com/128/7991/7991055.png",
   "Data": "https://img.icons8.com/color/96/combo-chart.png",
 "AI": "https://img.icons8.com/color/96/artificial-intelligence.png",
   "Business Skills": "https://img.icons8.com/color/96/conference.png",
