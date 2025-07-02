@@ -20,7 +20,7 @@ const topicStructure = {
   },
   "Non-Tech": {
     "Business Skills": ["Behavioral Questions", "Project Management", "Business Analytics", "Product Management"],
-    "Resume": ["Resume Based Questions"],
+    "Resume": ["Resume Based Questions", "Resume + JD Based Questions"],
   },
 };
 

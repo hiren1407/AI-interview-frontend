@@ -74,7 +74,7 @@ const Interview = () => {
   const response = await fetch(`${API_URL}/respond`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic, transcript: "", history: [], session_id: sessionId.current }),
+    body: JSON.stringify({ topic, transcript: "", history: [], session_id: sessionId.current, include_jd: topic === "Resume + JD Based Questions" }),
   });
 
   const data = await response.json();
@@ -152,7 +152,7 @@ const Interview = () => {
   const response = await fetch(`${API_URL}/respond`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic, transcript, history: chatHistory, session_id: sessionId.current }),
+    body: JSON.stringify({ topic, transcript, history: chatHistory, session_id: sessionId.current, include_jd: topic === "Resume + JD Based Questions" }),
   });
 
   const data = await response.json();

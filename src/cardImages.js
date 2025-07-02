@@ -35,4 +35,5 @@ export const topicImages = {
   "Behavioral Questions": "https://img.icons8.com/color/96/questions.png",
   "Project Management": "https://img.icons8.com/color/96/task.png",
   "Resume Based Questions": "https://img.icons8.com/color/96/resume.png",
+  "Resume + JD Based Questions": "https://cdn-icons-png.flaticon.com/128/1503/1503438.png",
 };
