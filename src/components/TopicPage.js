@@ -4,30 +4,12 @@ import Modal from "react-modal";
 import { API_URL } from "../constants";
 import { v4 as uuidv4 } from "uuid";
 import { topicImages } from "../cardImages";
+import { topicStructure } from "../topicStructure"; 
+import Breadcrumbs from "./Breadcrumbs"
 
 Modal.setAppElement("#root");
 
-const topicStructure = {
-  Tech: {
-    "Programming Languages": ["JavaScript", "Python", "Java","C-sharp"],
-    "Software Development": [
-      "Frontend Development",
-      "Backend Development",
-      "Full Stack Development",
-      "System Design",
-      "DevOps",
-      "Cloud Computing",
-      "Data Structures & Algorithms",
-        "Software Testing"
-    ],
-    "Data": ["Data Analytics", "Data Science"],
-    "AI": ["Machine Learning", "Deep Learning"],
-  },
-  "Non-Tech": {
-    "Business Skills": ["Behavioral Questions", "Project Management", "Business Analytics", "Product Management"],
-    "Resume": ["Resume Based Questions","Resume + JD Based Questions"],
-  },
-};
+
 
 const TopicPage = () => {
   const { category, subcategory } = useParams();
@@ -98,15 +80,16 @@ const TopicPage = () => {
 
 
   return (
-    <div className="p-6 max-w-3xl mx-auto text-center">
+    <div className="p-6 max-w-4xl mx-auto text-center">
       <h2 className="text-3xl font-semibold mb-4">{subcategory} Topics</h2>
      <div className="space-y-6">
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+       <Breadcrumbs />
+  <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
     {topics.map((topic) => (
       <div
         key={topic}
         onClick={() => handleTopicClick(topic)}
-        className="cursor-pointer border rounded-xl p-6 bg-white shadow hover:bg-purple-100 transition flex flex-col items-center space-y-4 min-h-[200px]"
+        className="cursor-pointer border rounded-xl p-6 bg-white shadow hover:bg-purple-100 transition flex flex-col items-center space-y-4 min-h-[150px]"
       >
         <img src={topicImages[topic]} alt={topic} className="w-20 h-20" />
         <h3 className="text-lg font-medium">{topic}</h3>
@@ -114,12 +97,7 @@ const TopicPage = () => {
     ))}
   </div>
 
-  <button
-    onClick={() => navigate(-1)}
-    className="mt-4 px-6 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
-  >
-    ⬅ Back
-  </button>
+  
 </div>
 
       {/* Resume Modal */}

@@ -1,5 +1,5 @@
 export const categoryImages = {
-  "Tech": "https://cdn-icons-png.flaticon.com/128/4269/4269808.png",
+  "Tech": "https://cdn-icons-png.flaticon.com/128/4365/4365271.png",
   "Non-Tech": "https://img.icons8.com/color/96/people-working-together.png",
 };
 
@@ -23,12 +23,20 @@ export const topicImages = {
   "Software Testing": "https://img.icons8.com/color/96/test-passed.png",
   "Data Analytics": "https://img.icons8.com/color/96/combo-chart.png",
   "Data Science": "https://img.icons8.com/color/96/artificial-intelligence.png",
+  "Data Engineering": "https://cdn-icons-png.flaticon.com/128/12594/12594617.png",
   "JavaScript": "https://img.icons8.com/color/96/javascript.png",
   "Python": "https://img.icons8.com/color/96/python.png",
   "Java": "https://img.icons8.com/color/96/java-coffee-cup-logo.png",
   "C-sharp":"https://cdn-icons-png.flaticon.com/128/6132/6132221.png",
+  "C++": "https://img.icons8.com/color/96/c-plus-plus-logo.png",
+  "Go": "https://images.icon-icons.com/2699/PNG/96/golang_logo_icon_171073.png",
+  
   "Machine Learning": "https://cdn-icons-png.flaticon.com/128/9240/9240330.png",
   "Deep Learning": "https://cdn-icons-png.flaticon.com/128/8637/8637113.png",
+  "Computer Vision": "https://cdn-icons-png.flaticon.com/128/5760/5760802.png",
+
+    "Behavioral Questions": "https://img.icons8.com/color/96/questions.png",
+    "Project Management": "https://img.icons8.com/color/96/task.png",
   "Business Analytics": "https://cdn-icons-png.flaticon.com/128/18148/18148662.png",
     "Product Management": "https://cdn-icons-png.flaticon.com/128/8787/8787057.png",
 

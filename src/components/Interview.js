@@ -272,7 +272,7 @@ const Interview = () => {
 
   return (
     
-    <div className="p-6  min-h-screen bg-gray-100">
+    <div className="p-6  min-h-screen">
         {isStarting && (
         <div className="fixed inset-0 z-50 bg-white bg-opacity-90 flex flex-col items-center justify-center">
             <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
