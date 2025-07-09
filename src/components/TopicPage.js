@@ -80,7 +80,7 @@ const TopicPage = () => {
 
 
   return (
-    <div className="p-6 max-w-4xl mx-auto text-center">
+    <div className="p-6 max-w-5xl mx-auto text-center">
       <h2 className="text-3xl font-semibold mb-4">{subcategory} Topics</h2>
      <div className="space-y-6">
        <Breadcrumbs />
@@ -89,7 +89,7 @@ const TopicPage = () => {
       <div
         key={topic}
         onClick={() => handleTopicClick(topic)}
-        className="cursor-pointer border rounded-xl p-6 bg-white shadow hover:bg-purple-100 transition flex flex-col items-center space-y-4 min-h-[150px]"
+        className="cursor-pointer border rounded-3xl p-6 bg-white shadow hover:bg-purple-100 transition flex flex-col items-center space-y-4 min-h-[150px]"
       >
         <img src={topicImages[topic]} alt={topic} className="w-20 h-20" />
         <h3 className="text-lg font-medium">{topic}</h3>

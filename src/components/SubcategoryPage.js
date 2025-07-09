@@ -26,7 +26,7 @@ const SubcategoryPage = () => {
           <div
             key={sub}
             onClick={() => handleClick(sub)}
-            className="cursor-pointer border rounded-xl p-6 bg-white shadow hover:bg-green-100 transition flex flex-col items-center space-y-4"
+            className="cursor-pointer border rounded-3xl p-6 bg-white shadow hover:bg-green-100 transition flex flex-col items-center space-y-4"
           >
             <img src={subcategoryImages[sub]} alt={sub} className="w-20 h-20" />
             <h3 className="text-xl font-medium">{sub}</h3>
