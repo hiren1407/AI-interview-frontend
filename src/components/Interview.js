@@ -20,10 +20,7 @@ const Interview = () => {
   const isRequestInProgress = useRef(false);
   const [messages, setMessages] = useState([]);
   
-  // Debug: Log messages state changes
-  useEffect(() => {
-    console.log("Messages state updated:", messages);
-  }, [messages]);
+  
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState( 30 * 60);
@@ -82,10 +79,7 @@ const Interview = () => {
       setIsStarting(true); // show loading
 
       try {
-        console.log("Starting interview API call..."); // Debug log
-        console.log("API_URL:", API_URL); // Debug log
-        console.log("Topic:", topic); // Debug log
-        console.log("Session ID:", sessionId.current); // Debug log
+        
 
         const response = await fetch(`${API_URL}/respond`, {
           method: "POST",
@@ -99,8 +93,7 @@ const Interview = () => {
           }),
         });
 
-        console.log("Response status:", response.status); // Debug log
-        console.log("Response ok:", response.ok); // Debug log
+        
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -109,23 +102,20 @@ const Interview = () => {
         }
 
         const data = await response.json();
-        console.log("API Response:", data); // Debug log
-        console.log("Data type:", typeof data); // Debug log
-        console.log("Data keys:", Object.keys(data)); // Debug log
+        
         
         if (data && data.reply) {
-          console.log("Setting messages with reply:", data.reply); // Debug log
+          
           
           // Use functional update to ensure we get the latest state
-          setMessages(prevMessages => {
-            console.log("Previous messages:", prevMessages);
+          setMessages(prevMessages => {console.log("Previous messages:", prevMessages);
             const newMessages = [{ role: "assistant", text: data.reply }];
-            console.log("New messages being set:", newMessages);
+            
             return newMessages;
           });
 
           if (data.audio_base64) {
-            console.log("Processing audio..."); // Debug log
+           
             const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
             const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
             const audioUrl = URL.createObjectURL(audioBlob);
@@ -146,7 +136,7 @@ const Interview = () => {
           }
         } else {
           console.log("No reply in response or data is null/undefined"); // Debug log
-          console.log("Data:", data); // Debug log
+          
         }
       } catch (error) {
         console.error("Error starting interview:", error);
@@ -193,7 +183,7 @@ const Interview = () => {
   const getResponseFromServer = async (transcript) => {
   // Prevent multiple concurrent requests
   if (isRequestInProgress.current) {
-    console.log("Request already in progress, skipping...");
+   
     return;
   }
   
