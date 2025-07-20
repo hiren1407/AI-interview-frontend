@@ -13,13 +13,21 @@ const Breadcrumbs = () => {
   let crumbs = [];
 
   if (category) {
-    crumbs.push({
-      label: capitalize(category),
-      path: `/subcategories/${category}`,
-    });
+    if (category === "Job-Specific Interviews") {
+      // For Job-Specific Interviews, don't show subcategory breadcrumb
+      crumbs.push({
+        label: capitalize(category),
+        path: `/topics/${category}/direct`,
+      });
+    } else {
+      crumbs.push({
+        label: capitalize(category),
+        path: `/subcategories/${category}`,
+      });
+    }
   }
 
-  if (subcategory) {
+  if (subcategory && subcategory !== "direct") {
     crumbs.push({
       label: capitalize(subcategory),
       path: `/topics/${category}/${subcategory}`,

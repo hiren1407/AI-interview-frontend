@@ -15,16 +15,20 @@ export const topicStructure = {
     "Data": ["Data Analytics", "Data Science","Data Engineering"],
     "AI": ["Machine Learning", "Deep Learning", "Computer Vision"],
   },
-  "Non-Tech": {
-    "Business Skills": [
+  "Business & Leadership": {
+    "Soft Skills": [
       "Behavioral Questions",
-      "Project Management",
-      "Business Analytics",
-      "Product Management"
+      "Communication Skills",
+      "Problem Solving & Critical Thinking"
     ],
-    "Resume": [
-      "Resume Based Questions",
-      "Resume + JD Based Questions"
+    "Business Management": [
+      "Project Management",
+      "Product Management",
+      "Business Analytics"
     ],
   },
+  "Job-Specific Interviews": [
+    "Resume Based Questions",
+    "Resume + JD Based Questions"
+  ],
 };

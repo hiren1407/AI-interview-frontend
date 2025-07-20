@@ -17,10 +17,16 @@ const Interview = () => {
   const chatRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const isRequestInProgress = useRef(false);
   const [messages, setMessages] = useState([]);
+  
+  // Debug: Log messages state changes
+  useEffect(() => {
+    console.log("Messages state updated:", messages);
+  }, [messages]);
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(topic === "Resume Based Questions" ? 15 * 60 : 30 * 60);
+  const [secondsLeft, setSecondsLeft] = useState( 30 * 60);
   const [showModal, setShowModal] = useState(false);
   const location = useLocation();
   const sessionId = useRef(location.state?.sessionId || uuidv4());
@@ -28,6 +34,7 @@ const Interview = () => {
   const [score, setScore] = useState(null);
   const [isStarting, setIsStarting] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
   const audioRef = useRef(null);
 
   const stopSpeaking = () => {
@@ -65,56 +72,94 @@ const Interview = () => {
   }, []);
 
   useEffect(() => {
-  const isMounted = { current: true };
-  
+    if (hasStarted.current) return; // Prevent multiple starts
+    hasStarted.current = true;
 
-  const startInterview = async () => {
-    setIsStarting(true); // show loading
-
-  const response = await fetch(`${API_URL}/respond`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic, transcript: "", history: [], session_id: sessionId.current, include_jd: topic === "Resume + JD Based Questions" }),
-  });
-
-  const data = await response.json();
-  if (!isMounted.current) return;
-
-  if (data.reply) {
-    setMessages([{ role: "assistant", text: data.reply }]);
-
-    if (data.audio_base64) {
-      const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
-      const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
-      const audioUrl = URL.createObjectURL(audioBlob);
+    const startInterview = async () => {
+      if (isRequestInProgress.current) return;
       
+      isRequestInProgress.current = true;
+      setIsStarting(true); // show loading
 
-            const audio = new Audio(audioUrl);
-        audioRef.current = audio;
+      try {
+        console.log("Starting interview API call..."); // Debug log
+        console.log("API_URL:", API_URL); // Debug log
+        console.log("Topic:", topic); // Debug log
+        console.log("Session ID:", sessionId.current); // Debug log
 
-        setIsSpeaking(true);
-        audio.onended = () => {
-        setIsSpeaking(false);
-        audioRef.current = null;
-        };
-
-        audio.play().catch(err => {
-        console.error("Audio play error:", err);
-        setIsSpeaking(false);
+        const response = await fetch(`${API_URL}/respond`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            topic, 
+            transcript: "", 
+            history: [], 
+            session_id: sessionId.current, 
+            include_jd: topic === "Resume + JD Based Questions"
+          }),
         });
-    }
-  }
 
-  setIsStarting(false); // hide loading after reply
-  };
+        console.log("Response status:", response.status); // Debug log
+        console.log("Response ok:", response.ok); // Debug log
 
-  startInterview();
-  return () => {
-    isMounted.current = false;
-    stopStream();
-    stopSpeaking();
-  };
-}, [topic]);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API Error:", errorText);
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log("API Response:", data); // Debug log
+        console.log("Data type:", typeof data); // Debug log
+        console.log("Data keys:", Object.keys(data)); // Debug log
+        
+        if (data && data.reply) {
+          console.log("Setting messages with reply:", data.reply); // Debug log
+          
+          // Use functional update to ensure we get the latest state
+          setMessages(prevMessages => {
+            console.log("Previous messages:", prevMessages);
+            const newMessages = [{ role: "assistant", text: data.reply }];
+            console.log("New messages being set:", newMessages);
+            return newMessages;
+          });
+
+          if (data.audio_base64) {
+            console.log("Processing audio..."); // Debug log
+            const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
+            const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            const audio = new Audio(audioUrl);
+            audioRef.current = audio;
+
+            setIsSpeaking(true);
+            audio.onended = () => {
+              setIsSpeaking(false);
+              audioRef.current = null;
+            };
+
+            audio.play().catch(err => {
+              console.error("Audio play error:", err);
+              setIsSpeaking(false);
+            });
+          }
+        } else {
+          console.log("No reply in response or data is null/undefined"); // Debug log
+          console.log("Data:", data); // Debug log
+        }
+      } catch (error) {
+        console.error("Error starting interview:", error);
+        console.error("Error details:", error.message);
+        console.error("Error stack:", error.stack);
+      } finally {
+        setIsStarting(false); // hide loading after reply
+        isRequestInProgress.current = false;
+      }
+    };
+
+    startInterview();
+  }, []); // Remove topic dependency to prevent re-runs
 
   useEffect(() => {
     chatRef.current?.scrollTo(0, chatRef.current.scrollHeight);
@@ -146,39 +191,59 @@ const Interview = () => {
 
 
   const getResponseFromServer = async (transcript) => {
+  // Prevent multiple concurrent requests
+  if (isRequestInProgress.current) {
+    console.log("Request already in progress, skipping...");
+    return;
+  }
+  
+  isRequestInProgress.current = true;
   const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
 
   setIsLoading(true);
-  const response = await fetch(`${API_URL}/respond`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic, transcript, history: chatHistory, session_id: sessionId.current, include_jd: topic === "Resume + JD Based Questions" }),
-  });
+  
+  try {
+    const response = await fetch(`${API_URL}/respond`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        topic, 
+        transcript, 
+        history: chatHistory, 
+        session_id: sessionId.current, 
+        include_jd: topic === "Resume + JD Based Questions"
+      }),
+    });
 
-  const data = await response.json();
-  setIsLoading(false);
+    const data = await response.json();
 
-  if (data.reply) {
-    setMessages(prev => [...prev, { role: "assistant", text: data.reply }]);
+    if (data.reply) {
+      setMessages(prev => [...prev, { role: "assistant", text: data.reply }]);
 
-    if (data.audio_base64) {
-      const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
-      const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-        audioRef.current = audio;
+      if (data.audio_base64) {
+        const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
+        const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+          audioRef.current = audio;
 
-        setIsSpeaking(true);
-        audio.onended = () => {
-        setIsSpeaking(false);
-        audioRef.current = null;
-        };
+          setIsSpeaking(true);
+          audio.onended = () => {
+          setIsSpeaking(false);
+          audioRef.current = null;
+          };
 
-        audio.play().catch(err => {
-        console.error("Audio play error:", err);
-        setIsSpeaking(false);
-        });
+          audio.play().catch(err => {
+          console.error("Audio play error:", err);
+          setIsSpeaking(false);
+          });
+      }
     }
+  } catch (error) {
+    console.error("Error getting response:", error);
+  } finally {
+    setIsLoading(false);
+    isRequestInProgress.current = false;
   }
 };
 
@@ -235,11 +300,14 @@ const Interview = () => {
   };
 
   const getFeedback = async () => {
+        setIsGeneratingFeedback(true);
+        
         const assistantMessages = messages.filter((m) => m.role === "assistant");
 
-        if (assistantMessages.length < 3) {
+        if (assistantMessages.length < 5) {
             setFeedback("Please complete at least 3 interview questions to receive feedback.");
             setScore(null);
+            setIsGeneratingFeedback(false);
             return;
         }
         const chatHistory = messages.map((m) => ({ role: m.role, content: m.text }));
@@ -248,24 +316,31 @@ const Interview = () => {
             // Stop the mic stream if it's still active
         stopStream();
 
-        const response = await fetch(`${API_URL}/feedback`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-            topic,
-            transcript: "",
-            history: chatHistory,
-            session_id: sessionId.current,
-            }),
-        });
+        try {
+            const response = await fetch(`${API_URL}/feedback`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                topic,
+                transcript: "",
+                history: chatHistory,
+                session_id: sessionId.current,
+                }),
+            });
 
-        const data = await response.json();
-        if (data.feedback && data.score !== undefined) {
-            setFeedback(data.feedback);
-            setScore(data.score);
-        } else {
-            setFeedback("Sorry, feedback couldn't be generated.");
+            const data = await response.json();
+            if (data.feedback && data.score !== undefined) {
+                setFeedback(data.feedback);
+                setScore(data.score);
+            } else {
+                setFeedback("Sorry, feedback couldn't be generated.");
+                setScore(null);
+            }
+        } catch (error) {
+            setFeedback("Error generating feedback. Please try again.");
             setScore(null);
+        } finally {
+            setIsGeneratingFeedback(false);
         }
 };
 
@@ -287,6 +362,12 @@ const Interview = () => {
           ref={chatRef}
           className="h-[400px] overflow-y-auto space-y-4 p-4 bg-gray-50 rounded border"
         >
+          {messages.length === 0 && !isLoading && !isStarting && (
+            <div className="text-center text-gray-500 mt-20">
+              <p>Interview is starting...</p>
+            </div>
+          )}
+          
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex items-start space-x-2 max-w-xs px-3 py-2 rounded-lg ${
@@ -357,37 +438,54 @@ const Interview = () => {
                 setShowModal(true);
                 getFeedback();
             }}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            disabled={isGeneratingFeedback}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-            ✅ Complete Interview
+            {isGeneratingFeedback ? "⏳ Processing..." : "✅ Complete Interview"}
             </button>
         </div>
       </div>
       <Modal
         isOpen={showModal}
+        onRequestClose={() => !isGeneratingFeedback && setShowModal(false)}
         contentLabel="Interview Finished"
         className="bg-white p-8 rounded-lg shadow-lg max-w-md mx-auto mt-20"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
       >
-        <h2 className="text-xl font-semibold mb-4">⏰ Time's Up!</h2>
-        {feedback && (
-        <div className="mt-4 p-4 bg-gray-100 rounded">
-            <h3 className="text-lg font-semibold mb-2">📝 AI Feedback</h3>
-            {score !== null && (
-            <p className="text-sm mb-2">⭐ Score: <span className="font-bold">{score}/10</span></p>
+        <h2 className="text-xl font-semibold mb-4">⏰ Interview Complete!</h2>
+        
+        {isGeneratingFeedback ? (
+          /* Loading Screen for Feedback */
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold mb-2">Generating Feedback...</h3>
+            <p className="text-gray-600">
+              Our AI is analyzing your interview performance and preparing personalized feedback.
+            </p>
+          </div>
+        ) : (
+          /* Feedback Results */
+          <>
+            {feedback && (
+            <div className="mt-4 p-4 bg-gray-100 rounded">
+                <h3 className="text-lg font-semibold mb-2">📝 AI Feedback</h3>
+                {score !== null && (
+                <p className="text-sm mb-2">⭐ Score: <span className="font-bold">{score}/10</span></p>
+                )}
+                <p className="text-sm whitespace-pre-line">{feedback}</p>
+            </div>
             )}
-            <p className="text-sm whitespace-pre-line">{feedback}</p>
-        </div>
+            <p className="mb-4">The interview session has ended. You can download the transcript or return to topics.</p>
+            <div className="flex gap-2 justify-end">
+              <button onClick={downloadTranscript} className="bg-gray-800 text-white px-4 py-2 rounded">
+                📄 Download
+              </button>
+              <button onClick={() => navigate(-1)} className="bg-blue-600 text-white px-4 py-2 rounded">
+                🔙 Go Back
+              </button>
+            </div>
+          </>
         )}
-        <p className="mb-4">The interview session has ended. You can download the transcript or return to topics.</p>
-        <div className="flex gap-2 justify-end">
-          <button onClick={downloadTranscript} className="bg-gray-800 text-white px-4 py-2 rounded">
-            📄 Download
-          </button>
-          <button onClick={() => navigate(-1)} className="bg-blue-600 text-white px-4 py-2 rounded">
-            🔙 Go Back
-          </button>
-        </div>
       </Modal>
     </div>
   );
