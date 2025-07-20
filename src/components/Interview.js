@@ -295,7 +295,7 @@ const Interview = () => {
         const assistantMessages = messages.filter((m) => m.role === "assistant");
 
         if (assistantMessages.length < 5) {
-            setFeedback("Please complete at least 3 interview questions to receive feedback.");
+            setFeedback("Please complete at least 5 interview questions to receive feedback.");
             setScore(null);
             setIsGeneratingFeedback(false);
             return;
